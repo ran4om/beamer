@@ -5004,13 +5004,13 @@ msgstr "Codice di abbinamento {digits}"
 
 #: win_app/moonlight_mode.py
 #, python-brace-format
-msgid "Moonlight mode: Moonlight was not found at {path}"
-msgstr "Modalità Moonlight: Moonlight non trovato in {path}"
+msgid "Moonlight mode: could not stream {host}"
+msgstr "Modalità Moonlight: impossibile trasmettere {host}"
 
 #: win_app/moonlight_mode.py
 #, python-brace-format
-msgid "Moonlight mode: could not stream {host}"
-msgstr "Modalità Moonlight: impossibile trasmettere {host}"
+msgid "Moonlight mode: Moonlight was not found at {path}"
+msgstr "Modalità Moonlight: Moonlight non trovato in {path}"
 
 #: win_app/pages_win.py
 msgid "This PC only."

@@ -4929,12 +4929,12 @@ msgstr ""
 
 #: win_app/moonlight_mode.py
 #, python-brace-format
-msgid "Moonlight mode: Moonlight was not found at {path}"
+msgid "Moonlight mode: could not stream {host}"
 msgstr ""
 
 #: win_app/moonlight_mode.py
 #, python-brace-format
-msgid "Moonlight mode: could not stream {host}"
+msgid "Moonlight mode: Moonlight was not found at {path}"
 msgstr ""
 
 #: win_app/pages_win.py

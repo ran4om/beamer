@@ -737,8 +737,14 @@ class WindowsApplication(QWidget):
                 monitors=platform_parts.desktop.monitors,
                 cursor=platform_parts.desktop.cursor_position,
                 resistance=self.sender._resistance,
+                geometry=self.sender.zones_and_layout,
             )
             self.moonlight.on_alert = self.bridge.alert.emit
+            # The stream's edges glow and land the pointer as Beamer's own do.
+            self.moonlight.on_pressure = lambda edge, pressure, crossed, part=None: self.bridge.pressure.emit(
+                edge, pressure, crossed, part)
+            self.moonlight.on_home = self.sender.land
+            self.moonlight.on_arrival = self.sender.show_arrival
             rehook = getattr(self.hooks, "rehook_keyboard", None)
             if rehook is not None:
                 self.moonlight.on_front = rehook

@@ -10,7 +10,7 @@
 <p align="center">Made by Toby George Read Kalkman, <a href="https://kalkmancode.co.uk">Kalkman Code</a>.</p>
 
 > **This is a fork.** On top of Beamer 1.5.13 it adds:
-> - **[Moonlight mode](docs/MOONLIGHT-MODE.md)** (Windows): for a machine far away, the edge and the shortcut open a Moonlight stream of it instead of sending input across.
+> - **[Moonlight mode](docs/MOONLIGHT-MODE.md)** (Windows): for a machine far away, the edge and the shortcut open a Moonlight stream of it instead of sending input across. The stream's edges lead home, or on to its other monitors, as the layout has them.
 > - **[Hyprland setup](contrib/hyprland/README.md)**: builds the portal fork that gives Hyprland the RemoteDesktop and Clipboard portals Beamer needs, without replacing the packaged one.
 
 ![The pointer is pushed against the right-hand edge of a Mac's screen, the edge lights up as the push builds, and the pointer carries on onto the Windows PC beside it at the same height](assets/beamer-crossing.gif)

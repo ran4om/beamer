@@ -874,7 +874,7 @@ class LinkSender:
         self._notify_pressure(model.edge, outcome.pressure, outcome.action == return_edge.CROSS, part)
         if outcome.action == return_edge.CROSS:
             cross_out = getattr(self, "cross_out", None)
-            if cross_out is not None and cross_out(target):
+            if cross_out is not None and cross_out(target, outcome):
                 # The model disarmed itself at the breakthrough; nothing went, so it is re-armed,
                 # and the push that broke through does not carry straight on through it again.
                 with self._lock:
@@ -1566,6 +1566,21 @@ class LinkSender:
             LOGGER.exception("Could not place the pointer at the %s edge on arrival", edge)
             return
         self._report_arrival(edge, x, y)
+
+    def land(self, edge: str, offset: float, display=None, side=None) -> None:
+        """Moonlight mode's way back: the pointer comes home through `edge` as it would from the
+        peer, and the push still under the hand does not carry it straight back out."""
+        with self._lock:
+            for _peer, model in self._models:
+                model.start_grace()
+        self._land(edge, offset, display, side)
+
+    def show_arrival(self, edge, x, y) -> None:
+        self._report_arrival(edge, x, y)
+
+    def zones_and_layout(self):
+        """This PC's zones and the layout, with the peers' displays in it."""
+        return self._zone_list, self._setting("layout", {}) or {}
 
     def _report_arrival(self, edge, x=None, y=None) -> None:
         if self._arrival_callback is None:
