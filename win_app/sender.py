@@ -238,6 +238,11 @@ class LinkSender:
         # cannot send input away, only an edge push can.
         self.input_held: Callable[[], bool] = lambda: True
         self.push_out: Optional[Callable[[bytes, Callable[[], None], Callable[[], None]], bool]] = None
+        # Moonlight mode's, both on the hook thread: `cross_out(peer)` is offered a way out that
+        # broke through and is True when it took it instead; `local_motion(dx, dy)` sees each raw
+        # movement while input is here and is True when the zones must not.
+        self.cross_out: Optional[Callable[[bytes], bool]] = None
+        self.local_motion: Optional[Callable[[int, int], bool]] = None
         # The responder's: whether a peer's input is on this PC, and sending it home.
         self.driven: Callable[[], bool] = lambda: False
         self.send_peer_home: Callable[[], bool] = lambda: False
@@ -766,6 +771,10 @@ class LinkSender:
                 self._home_hold.motion(now)
                 return
             self._home_hold = None
+        # Read with getattr: tests build a sender with __new__, which never sets either hook.
+        local_motion = getattr(self, "local_motion", None)
+        if local_motion is not None and local_motion(int(dx), int(dy)):
+            return
         self._press_edge(int(dx), int(dy))
 
     def set_shake(self, enabled: bool, stroke: float, on_shake=None) -> None:
@@ -864,6 +873,15 @@ class LinkSender:
         self._pressure_model = model
         self._notify_pressure(model.edge, outcome.pressure, outcome.action == return_edge.CROSS, part)
         if outcome.action == return_edge.CROSS:
+            cross_out = getattr(self, "cross_out", None)
+            if cross_out is not None and cross_out(target):
+                # The model disarmed itself at the breakthrough; nothing went, so it is re-armed,
+                # and the push that broke through does not carry straight on through it again.
+                with self._lock:
+                    self._arm_locked()
+                    for _peer, armed in self._models:
+                        armed.start_grace()
+                return
             offset = receiver.corner_offset(model.corner, model.edge) if isinstance(model, return_edge.CornerPush) else outcome.offset
             # The model names the edge on the far side, not the one just left: it is the same
             # border, read from the other end. The display it leads to lands the pointer there, as

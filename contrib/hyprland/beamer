@@ -1,0 +1,3 @@
+#!/bin/sh
+# ~/.local/bin/beamer: runs Beamer from a source checkout with the system's Python.
+exec /usr/bin/python "${BEAMER_SRC:-$HOME/.local/opt/beamer}/win_app/kvm_bridge_win.py" "$@"

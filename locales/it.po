@@ -4689,6 +4689,10 @@ msgid "Portable mode leaves Windows Firewall unchanged. Your network must alread
 msgstr "La modalità portatile non modifica Windows Firewall. La rete deve già consentire Beamer."
 
 #: win_app/kvm_bridge_win.py
+msgid "Moonlight mode (away from home)"
+msgstr "Modalità Moonlight (lontano da casa)"
+
+#: win_app/kvm_bridge_win.py
 msgid "Portable — settings and pairing keys stay in this folder, protected by your passphrase. Administrator apps cannot be controlled."
 msgstr "Portatile: impostazioni e chiavi di abbinamento restano in questa cartella, protette dalla frase segreta. Non è possibile controllare le app eseguite come amministratore."
 
@@ -4997,6 +5001,16 @@ msgstr "Cifre di abbinamento {digits}"
 #, python-brace-format
 msgid "Pairing code {digits}"
 msgstr "Codice di abbinamento {digits}"
+
+#: win_app/moonlight_mode.py
+#, python-brace-format
+msgid "Moonlight mode: Moonlight was not found at {path}"
+msgstr "Modalità Moonlight: Moonlight non trovato in {path}"
+
+#: win_app/moonlight_mode.py
+#, python-brace-format
+msgid "Moonlight mode: could not stream {host}"
+msgstr "Modalità Moonlight: impossibile trasmettere {host}"
 
 #: win_app/pages_win.py
 msgid "This PC only."

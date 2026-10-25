@@ -4621,6 +4621,10 @@ msgid "Portable mode leaves Windows Firewall unchanged. Your network must alread
 msgstr ""
 
 #: win_app/kvm_bridge_win.py
+msgid "Moonlight mode (away from home)"
+msgstr ""
+
+#: win_app/kvm_bridge_win.py
 msgid "Portable — settings and pairing keys stay in this folder, protected by your passphrase. Administrator apps cannot be controlled."
 msgstr ""
 
@@ -4921,6 +4925,16 @@ msgstr ""
 #: win_app/machines_win.py
 #, python-brace-format
 msgid "Pairing code {digits}"
+msgstr ""
+
+#: win_app/moonlight_mode.py
+#, python-brace-format
+msgid "Moonlight mode: Moonlight was not found at {path}"
+msgstr ""
+
+#: win_app/moonlight_mode.py
+#, python-brace-format
+msgid "Moonlight mode: could not stream {host}"
 msgstr ""
 
 #: win_app/pages_win.py

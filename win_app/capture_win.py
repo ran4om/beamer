@@ -60,6 +60,8 @@ kernel32 = ctypes.WinDLL("kernel32", use_last_error=True) if _IS_WINDOWS else No
 
 WM_INPUT = 0x00FF
 WM_MODIFIER_RESYNC = 0x8001
+# Puts the keyboard hook back at the front of the chain (Moonlight mode; see rehook_keyboard).
+WM_REHOOK_KEYBOARD = 0x8002
 EVENT_SYSTEM_DESKTOPSWITCH = 0x0020
 WINEVENT_OUTOFCONTEXT = 0
 RID_INPUT = 0x10000003
@@ -660,7 +662,32 @@ class Hooks:
         if self._window and not user32.PostMessageW(self._window, WM_MODIFIER_RESYNC, 0, 0):
             LOGGER.warning("Could not queue the keyboard state after an input desktop switch")
 
+    def rehook_keyboard(self) -> None:
+        """Windows calls the newest low-level hook first, and an app that grabs the keyboard (SDL,
+        for Moonlight's stream) installs its own as it gains focus and swallows keys there: the
+        shortcut never reached Beamer. Installing this hook again makes it the newest; every key
+        it does not claim still goes on down the chain. From any thread."""
+        if self._window and not user32.PostMessageW(self._window, WM_REHOOK_KEYBOARD, 0, 0):
+            LOGGER.warning("Could not ask the hook thread to reinstall the keyboard hook")
+
+    def _rehook_keyboard_now(self) -> None:
+        if not self._handles or not self._callbacks:
+            return
+        handle = user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._callbacks[0], None, 0)
+        if not handle:
+            LOGGER.warning("Could not reinstall the keyboard hook: %s", ctypes.WinError(ctypes.get_last_error()))
+            return
+        user32.UnhookWindowsHookEx(self._handles[0])
+        self._handles[0] = handle
+        LOGGER.debug("Keyboard hook reinstalled at the front of the chain")
+
     def _window_proc(self, hwnd, message, wparam, lparam):
+        if message == WM_REHOOK_KEYBOARD:
+            try:
+                self._rehook_keyboard_now()
+            except Exception:
+                LOGGER.exception("Could not reinstall the keyboard hook")
+            return 0
         if message == WM_MODIFIER_RESYNC:
             try:
                 from desktop_win import _on_default_desktop

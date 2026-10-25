@@ -84,6 +84,7 @@ from core import keytable
 from core import peerlist
 from core.pairing import PairingService, local_address_towards
 import machines_win
+import moonlight_mode
 import linux_desktop
 import pages_win
 import hardware_win
@@ -728,6 +729,21 @@ class WindowsApplication(QWidget):
                 portal.JeepneyBus,
                 lambda: self.sender.toggle_shortcut() if not self.sender.redirecting else None,
             )
+        # Moonlight mode: the ways out open a stream of the peer instead, for when it is far away.
+        self.moonlight = None
+        if sys.platform == "win32":
+            self.moonlight = moonlight_mode.MoonlightMode(
+                moonlight_mode.settings_path(self.config_path),
+                monitors=platform_parts.desktop.monitors,
+                cursor=platform_parts.desktop.cursor_position,
+                resistance=self.sender._resistance,
+            )
+            self.moonlight.on_alert = self.bridge.alert.emit
+            rehook = getattr(self.hooks, "rehook_keyboard", None)
+            if rehook is not None:
+                self.moonlight.on_front = rehook
+            self.sender.cross_out = self.moonlight.cross_out
+            self.sender.local_motion = self.moonlight.motion
         if hasattr(platform_parts.injector, "on_problem"):
             platform_parts.injector.on_problem = lambda sentence: self.bridge.alert.emit("Beamer", sentence)
         if self.permission_state is not None and hasattr(platform_parts.injector, "on_permission"):
@@ -1372,7 +1388,19 @@ class WindowsApplication(QWidget):
         return tr("Send input to {name}").format(name=self._shown(peerlist.labels(self._peer_entries)[sendable[0]['token']])) if len(sendable) == 1 else tr("Send input across")
 
     def toggle_redirect(self) -> None:
+        moonlight = getattr(self, "moonlight", None)
+        if moonlight is not None and not self.sender.redirecting and moonlight.show():
+            return
         self.sender.toggle()
+
+    def toggle_moonlight(self, on: bool) -> None:
+        if getattr(self, "moonlight", None) is None:
+            return
+        if on and self.sender.redirecting:
+            self.sender.set_redirecting(False)
+        self.moonlight.set_on(on)
+        if hasattr(self, "moonlight_action"):
+            self.moonlight_action.setChecked(self.moonlight.on)
 
     def _can_send(self) -> bool:
         """Whether the Send button and the tray can move input now. On Wayland only bringing it back:
@@ -4978,6 +5006,11 @@ class WindowsApplication(QWidget):
         self.redirect_action.triggered.connect(self.toggle_redirect)
         self.pause_action = menu.addAction(tr("Pause crossing"))
         self.pause_action.triggered.connect(self.toggle_pause)
+        if getattr(self, "moonlight", None) is not None:
+            self.moonlight_action = menu.addAction(tr("Moonlight mode (away from home)"))
+            self.moonlight_action.setCheckable(True)
+            self.moonlight_action.setChecked(self.moonlight.on)
+            self.moonlight_action.triggered.connect(self.toggle_moonlight)
         menu.addSeparator()
         self.tray_menu = menu
         # One tick per direction, each the same switch the Overview page shows, so either
@@ -5191,6 +5224,8 @@ class WindowsApplication(QWidget):
             self._sending_detail = f"This PC's keyboard could not be captured: {exc}"
             return
         self.sender.start(config)
+        if getattr(self, "moonlight", None) is not None:
+            self.moonlight.start()
 
     def _capture_stopped(self, error: BaseException) -> None:
         """On the capture thread, when capture ended on its own (the X server gone, a stalled
@@ -5228,7 +5263,15 @@ class WindowsApplication(QWidget):
             return self.sender.on_key(name, down, vk, us)
         action = self._trigger.feed(name, down, time.monotonic())
         if action is not None:
-            if action == capture_win.TOGGLE:
+            moonlight = getattr(self, "moonlight", None)
+            if moonlight is not None and moonlight.on and not self.sender.redirecting:
+                if action == capture_win.TOGGLE:
+                    moonlight.toggle()
+                elif action == capture_win.REDIRECT:
+                    moonlight.show()
+                elif moonlight.showing():
+                    moonlight.toggle()
+            elif action == capture_win.TOGGLE:
                 self.sender.toggle_shortcut()
             else:
                 self.sender.hold_shortcut(action == capture_win.REDIRECT)
@@ -5453,6 +5496,8 @@ class WindowsApplication(QWidget):
             self.pairing.stop()
         self.server.stop()
         self._stop_sending()
+        if getattr(self, "moonlight", None) is not None:
+            self.moonlight.stop()
         shortcut = getattr(self, "global_shortcut", None)
         if shortcut is not None:
             shortcut.stop()

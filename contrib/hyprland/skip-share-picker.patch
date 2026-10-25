@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -51,7 +51,7 @@ add_compile_options(
+ 
+ # dependencies
+ message(STATUS "Checking deps...")
+-add_subdirectory(hyprland-share-picker)
++# Reuse the packaged share picker; only build the portal backend.
+ 
+ find_package(Threads REQUIRED)
+ find_package(PkgConfig REQUIRED)
